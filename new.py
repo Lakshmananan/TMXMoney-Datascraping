@@ -1,22 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed May 27 03:01:05 2020
+Created on Mon Jun  1 14:11:37 2020
 
 @author: laksh
 """
-
-# Import libraries
 import pandas as pd
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from requests.exceptions import ConnectionError
+from multiprocessing import Pool, cpu_count
 
-tsx = pd.read_csv("tsx_raw.csv")
-tsxv = pd.read_csv("tsxv_raw.csv")
+data = pd.read_csv("tsx_raw.csv")
 
-def scraper(data, saveas):   
+def selenium_func(data):
     driver = webdriver.Chrome(executable_path=r"C:\Users\laksh\Desktop\Scrapers\Kijiji-bot\chromedriver.exe")
-    
     counter = len(data)
     for i in range(len(data)):
         try:
@@ -48,9 +45,19 @@ def scraper(data, saveas):
             data.Industry[i] = 'nan'
             data.NAICS[i] = 'nan'
             data.Price[i] = 'nan'
-    
-    driver.close()
-    data.to_csv(saveas, index=False)
+            
+def run_parallel_selenium_processes(data, selenium_func):
 
-scraper(tsx, 'tsx_parsed.csv')
-scraper(tsxv,'tsxv_parsed.csv')
+    pool = Pool()
+
+    # max number of parallel process
+    ITERATION_COUNT = cpu_count()-1
+
+    count_per_iteration = len(data) / float(ITERATION_COUNT)
+
+    for i in range(0, ITERATION_COUNT):
+        list_start = int(count_per_iteration * i)
+        list_end = int(count_per_iteration * (i+1))
+        pool.apply_async(selenium_func, [data[list_start:list_end]])
+
+run_parallel_selenium_processes(data, selenium_func(data))
