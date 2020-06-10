@@ -6,6 +6,7 @@ Created on Wed May 27 03:01:05 2020
 """
 
 # Import libraries
+import threading, time
 import pandas as pd
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -53,6 +54,14 @@ def scraper(data, saveas, us):
     driver.close()
     data.to_csv(saveas, index=False)
 
+threadTsx = threading.Thread(target=scraper,args=(tsx, 'tsx_parsed.csv', ''))
+threadTsxv = threading.Thread(target=scraper,args=(tsxv,'tsxv_parsed.csv', ''))
+threadNasdaq = threading.Thread(target=scraper,args=(nasdaq,'nasdaq_parsed.csv', ':us'))
+
+threadTsx.start()
+threadTsxv.start()
+threadNasdaq.start()
+
 # scraper(tsx, 'tsx_parsed.csv', '')
 # scraper(tsxv,'tsxv_parsed.csv', '')
-scraper(nasdaq,'nasdaq_parsed.csv', ':us')
+# scraper(nasdaq,'nasdaq_parsed.csv', ':us')
